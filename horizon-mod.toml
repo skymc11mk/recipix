@@ -1,0 +1,9 @@
+id = "recipix"
+name = "Recipix"
+version = "0.1.0"
+description = "Recipe viewer: browse every item (including mod/server items), click for how it is crafted, right-click or U for uses. Search with names, @namespace, #tag."
+authors = ["Recipix"]
+api = "0.1"
+side = "client"
+capabilities = ["recipes", "ui", "input", "game-read"]
+experimental = ["recipes", "ui", "input"]

@@ -1,0 +1,175 @@
+package horizon:mods@0.1.0;
+
+interface game {
+    record player {
+        x: f64,
+        y: f64,
+        z: f64,
+        yaw: f32,
+        pitch: f32,
+        health: f32,
+        food: u32,
+        dimension: string,
+    }
+    record clock {
+        game-time: u64,
+        day-time: u64,
+    }
+    get-player: func() -> option<player>;
+    get-clock: func() -> option<clock>;
+    record hit {
+        block-x: s32,
+        block-y: s32,
+        block-z: s32,
+        x: f64,
+        y: f64,
+        z: f64,
+        block: string,
+    }
+    raycast: func(distance: f32) -> option<hit>;
+}
+
+interface input {
+    record held-item {
+        id: string,
+        count: u32,
+        slot: u32,
+    }
+    record item-use {
+        item: held-item,
+        ticks: u32,
+    }
+    variant event {
+        use-start(item-use),
+        use-stop(item-use),
+        key-down(string),
+        key-up(string),
+        wheel(f32),
+    }
+    claim-items: func(ids: list<string>);
+    register-key: func(name: string, label: string, key: string) -> result<_, string>;
+    held: func() -> option<held-item>;
+    poll: func() -> list<event>;
+    claim-wheel: func(on: bool);
+    record mapping-state {
+        label: string,
+        down: bool,
+    }
+    mapping: func(name: string) -> option<mapping-state>;
+    clicks-per-second: func() -> tuple<u32, u32>;
+}
+
+interface recipes {
+    record stack {
+        item: u32,
+        count: u32,
+        components: string,
+    }
+    enum kind {
+        crafting-shaped,
+        crafting-shapeless,
+        smelting,
+        blasting,
+        smoking,
+        campfire,
+        stonecutting,
+        smithing,
+        brewing,
+    }
+    record recipe {
+        id: string,
+        kind: kind,
+        category: string,
+        group: string,
+        width: u32,
+        height: u32,
+        slots: list<list<stack>>,
+        results: list<stack>,
+        cooking-time: u32,
+        experience: f32,
+        book-id: s32,
+    }
+    record item {
+        id: string,
+        name: string,
+        tags: list<string>,
+    }
+    items: func() -> list<item>;
+    all: func() -> list<recipe>;
+    known: func() -> list<s32>;
+    place: func(book-id: s32, all: bool) -> result<_, string>;
+    give: func(stack: stack) -> result<_, string>;
+}
+
+interface browser {
+    record stack {
+        item: string,
+        count: u32,
+        components: string,
+    }
+    record click {
+        index: u32,
+        right: bool,
+    }
+    record item-key {
+        key: string,
+        stack: stack,
+    }
+    record slot-click {
+        recipe: u32,
+        slot: u32,
+        stack: stack,
+        right: bool,
+    }
+    variant event {
+        clicked(click),
+        search(string),
+        key(item-key),
+        slot-clicked(slot-click),
+        action(u32),
+        page(u32),
+        back,
+        tab(u32),
+    }
+    enum layout {
+        grid,
+        cooking,
+        single,
+        smithing,
+        brewing,
+    }
+    record recipe-view {
+        layout: layout,
+        width: u32,
+        height: u32,
+        slots: list<list<stack>>,
+        results: list<stack>,
+        note: string,
+        action: option<bool>,
+    }
+    set-items: func(items: list<stack>);
+    set-recipes: func(title: string, tabs: list<stack>, tab: u32, recipes: list<recipe-view>);
+    poll: func() -> list<event>;
+}
+
+interface events {
+    record registration {
+        commands: list<string>,
+        tick: bool,
+        frame: bool,
+        chat: bool,
+    }
+    init: func() -> result<registration, string>;
+    tick: func(tick: u64);
+    frame: func(seconds: f32);
+    command: func(name: string, args: string) -> result<option<string>, string>;
+    chat: func(text: string);
+}
+
+world recipix-mod {
+    import game;
+    import input;
+    import recipes;
+    import browser;
+    export events;
+}
